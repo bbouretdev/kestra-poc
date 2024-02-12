@@ -1,0 +1,6 @@
+id: example
+namespace: test
+tasks:
+  - id: hello_world
+    type: io.kestra.core.tasks.log.Log
+    message: Hello World!
