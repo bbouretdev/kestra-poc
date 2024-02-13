@@ -1,14 +1,14 @@
 id: get-all-pokemons
 namespace: poc.pokeapi
 tasks:
-  - id: python1
+  - id: list-pokemons
     type: io.kestra.plugin.scripts.python.Script
     docker:
       image: python:slim
     beforeCommands:
       - pip install requests
     script: "{{ read('scripts/scripts/listPokemons.py') }}"
-  - id: python2
+  - id: extract-pokemon-data
     type: io.kestra.plugin.scripts.python.Script
     inputFiles:
       pokemons.json: "{{ outputs.python1.outputFiles['pokemons.json'] }}"
@@ -16,17 +16,4 @@ tasks:
       image: python:slim
     beforeCommands:
       - pip install requests
-    script: |
-      import requests
-      import json
-      csvLines = []
-      api_endpoint = 'https://pokeapi.co/api/v2/pokemon/'
-      with open('{{ workingDir }}/pokemons.json') as f:
-          pokemons = json.load(f)
-      for pokemon in pokemons:
-          fields = {}
-          response = requests.get(api_endpoint + pokemon)
-          data = json.loads(response.text)
-          fields['name'] = data['name']
-          csvLines.append(fields)
-      print(csvLines)
+    script: "{{ read('scripts/scripts/extractPokemonData.py') }}"
