@@ -1,5 +1,6 @@
 import requests
 import json
+import pandas as pd
 csvLines = []
 api_endpoint = 'https://pokeapi.co/api/v2/pokemon/'
 with open('pokemons.json') as f:
@@ -16,4 +17,6 @@ for pokemon in pokemons:
     fields['spd'] = data['stats'][4]['base_stat']
     fields['spe'] = data['stats'][5]['base_stat']
     csvLines.append(fields)
+    df = pd.DataFrame(csvLines)
+    df.to_csv("pokemons.csv", index = False)
 print(csvLines)
