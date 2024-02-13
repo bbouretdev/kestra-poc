@@ -1,17 +1,20 @@
 id: get-all-pokemons
-namespace: poc.pokeapi
+namespace: dev
 tasks:
-  - id: list-pokemons
+  - id: listPokemons
     type: io.kestra.plugin.scripts.python.Script
     docker:
       image: python:slim
     beforeCommands:
       - pip install requests
+    outputFiles:
+      - "pokemons.json"
     script: "{{ read('scripts/scripts/listPokemons.py') }}"
-  - id: extract-pokemon-data
+
+  - id: extractPokemonData
     type: io.kestra.plugin.scripts.python.Script
     inputFiles:
-      pokemons.json: "{{ outputs.python1.outputFiles['pokemons.json'] }}"
+      pokemons.json: "{{ outputs.listPokemons.outputFiles['pokemons.json'] }}"
     docker:
       image: python:slim
     beforeCommands:

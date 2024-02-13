@@ -13,6 +13,5 @@ else:
     print("Error:", response.status_code, response.text)
 print(nextCall)
 print(pokemons)
-with open('{{ outputDir }}/pokemons.json', 'w') as f:
+with open('pokemons.json', 'w') as f:
     json.dump(pokemons, f)
-print('{{ outputDir }}')
