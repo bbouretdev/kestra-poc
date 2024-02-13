@@ -7,7 +7,7 @@ tasks:
       image: python:slim
     beforeCommands:
       - pip install requests
-    script: "{{ read('scripts/listPokemons.py') }}"
+    script: "{{ read('scripts/scripts/listPokemons.py') }}"
   - id: python2
     type: io.kestra.plugin.scripts.python.Script
     inputFiles:
