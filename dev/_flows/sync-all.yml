@@ -1,0 +1,16 @@
+id: sync-all
+namespace: dev
+
+inputs:
+  - name: PAT
+    type: STRING
+
+tasks:
+  - id: git-sync
+    type: io.kestra.plugin.git.Sync
+    url: https://github.com/bbouretdev/kestra-poc
+    branch: master
+    username: bbouretdev
+    password: "{{ inputs.PAT }}"
+    gitDirectory: dev
+    namespaceFilesDirectory: scripts
