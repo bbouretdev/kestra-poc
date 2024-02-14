@@ -13,4 +13,3 @@ tasks:
     username: bbouretdev
     password: "{{ inputs.PAT }}"
     gitDirectory: dev
-    namespaceFilesDirectory: scripts
