@@ -26,7 +26,14 @@ tasks:
   - id: sqlQuery
     type: io.kestra.plugin.jdbc.duckdb.Query
     inputFiles:
-      in.csv: "{{ outputs.extractPokemonData.outputFiles['pokemons.csv'] }}"
+      pokemons.csv: "{{ outputs.extractPokemonData.outputFiles['pokemons.csv'] }}"
+    outputFiles:
+       - out
     sql: |
-      SELECT name
-      FROM read_csv_auto('in.csv', header=True)
+      COPY (
+        SELECT name
+        FROM read_csv_auto('{{ workingDir }}/pokemons.csv', header=True)
+        WHERE name ^@ 'c'
+      ) TO
+        '{{ outputFiles.out }}'
+      (HEADER, DELIMITER ',');
