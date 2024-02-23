@@ -1,0 +1,32 @@
+id: create-vm-and-deploy-gitlab-server-with-digitalocean
+namespace: dev
+
+inputs:
+  - name: DOP_TOKEN
+    type: STRING
+  - name: SSH_KEY_FINGERPRINT
+    type: STRING
+  - name: RESERVED_IP
+    type: STRING
+  - name: SSH_KEY
+    type: FILE
+    
+    
+tasks:  
+  - id: "install-doctl-and-create-vm-with-reserved-ip"
+    type: "io.kestra.plugin.scripts.shell.Script"
+    beforeCommands:
+      - "{{ read('scripts/gitlab-vm-deployment/install-doctl.sh') }}"
+    script: |
+      doctl auth init -t "{{ inputs.DOP_TOKEN }}"
+      doctl compute droplet create kestra-gitlab-server --droplet-agent=true --enable-monitoring --image ubuntu-20-04-x64 --no-header --region LON1 --size s-4vcpu-8gb --ssh-keys "{{ inputs.SSH_KEY_FINGERPRINT }}" --tag-name kestra-gitlab --wait
+      ID_D=$(doctl compute droplet get kestra-gitlab-server | awk 'NR==2{print $1}')
+      doctl compute reserved-ip-action assign "{{ inputs.RESERVED_IP }}" $ID_D
+
+  - id: "install-docker-and-gitlab-on-vm"
+    type: "io.kestra.plugin.scripts.shell.Script"
+    beforeCommands:
+      - "{{ read('scripts/gitlab-vm-deployment/install-ssh.sh') }}"
+    script: |
+      chmod 600 {{ inputs.SSH_KEY }}
+      ssh -o StrictHostKeyChecking=no -i {{ inputs.SSH_KEY }} root@"{{ inputs.RESERVED_IP }}" 'cd ~ && apt install docker -y && apt install docker-compose -y && curl -sS https://gist.githubusercontent.com/theo-huret/ac3bb5a59db193cf1de90a560b57b724/raw/a8d85038c0331b73ff7fab8ed7647f7f0f8e3a09/docker-compose.yml > docker-compose.yml && docker-compose up -d'
