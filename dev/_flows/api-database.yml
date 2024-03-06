@@ -1,5 +1,5 @@
 id: api-database
-namespace: dev
+namespace: dev.data-pipelines
 tasks:
   - id: listPokemons
     type: io.kestra.plugin.scripts.python.Script

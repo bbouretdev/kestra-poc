@@ -1,5 +1,5 @@
 id: create-vm-and-deploy-gitlab-server-with-digitalocean
-namespace: dev
+namespace: dev.ops-actions
 
 inputs:
   - name: DOP_TOKEN
