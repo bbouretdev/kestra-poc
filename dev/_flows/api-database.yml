@@ -1,4 +1,4 @@
-id: get-all-pokemons
+id: api-database
 namespace: dev
 tasks:
   - id: listPokemons
@@ -9,24 +9,24 @@ tasks:
       - pip install requests
     outputFiles:
       - "pokemons.json"
-    script: "{{ read('scripts/listPokemons.py') }}"
+    script: "{{ read('scripts/data-pipelines/api-database/listPokemons.py') }}"
 
-  - id: extractPokemonData
+  - id: writeToPostgre
     type: io.kestra.plugin.scripts.python.Script
     inputFiles:
       pokemons.json: "{{ outputs.listPokemons.outputFiles['pokemons.json'] }}"
     docker:
       image: python:slim
     beforeCommands:
-      - pip install requests pandas
+      - pip install requests pandas sqlalchemy psycopg2-binary
     outputFiles:
       - "pokemons.csv"
-    script: "{{ read('scripts/extractPokemonData.py') }}"
+    script: "{{ read('scripts/data-pipelines/api-database/writeToPostgre.py') }}"
 
-  - id: sqlQuery
+  - id: filterUsingDuckDB
     type: io.kestra.plugin.jdbc.duckdb.Query
     inputFiles:
-      pokemons.csv: "{{ outputs.extractPokemonData.outputFiles['pokemons.csv'] }}"
+      pokemons.csv: "{{ outputs.writeToPostgre.outputFiles['pokemons.csv'] }}"
     outputFiles:
        - out
     sql: |
