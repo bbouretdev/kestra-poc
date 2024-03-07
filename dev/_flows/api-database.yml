@@ -9,7 +9,7 @@ tasks:
       - pip install requests
     outputFiles:
       - "pokemons.json"
-    script: "{{ read('scripts/data-pipelines/api-database/listPokemons.py') }}"
+    script: "{{ read('scripts/api-database/listPokemons.py') }}"
 
   - id: writeToPostgre
     type: io.kestra.plugin.scripts.python.Script
@@ -21,7 +21,7 @@ tasks:
       - pip install requests pandas sqlalchemy psycopg2-binary
     outputFiles:
       - "pokemons.csv"
-    script: "{{ read('scripts/data-pipelines/api-database/writeToPostgre.py') }}"
+    script: "{{ read('scripts/api-database/writeToPostgre.py') }}"
 
   - id: filterUsingDuckDB
     type: io.kestra.plugin.jdbc.duckdb.Query
