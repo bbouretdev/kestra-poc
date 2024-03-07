@@ -1,0 +1,21 @@
+id: api-kafka
+namespace: dev.data-pipelines
+
+tasks:
+  - id: api
+    type: io.kestra.plugin.fs.http.Request
+    uri: https://dummyjson.com/products
+
+  - id: produce
+    type: io.kestra.plugin.kafka.Produce
+    from:
+      key: mykey
+      value: "{{ outputs.api.body }}"
+      timestamp: "{{ execution.startDate }}"
+      headers:
+        x-header: some value
+    keySerializer: STRING
+    valueSerializer: JSON
+    topic: kestra
+    properties:
+      bootstrap.servers: 51.68.229.67:29092
