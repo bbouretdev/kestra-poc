@@ -7,12 +7,12 @@ tasks:
     branch: master
     gitDirectory: dev
 
-  - id: sync-dev.data-pipelines
+  - id: data-pipelines
     type: io.kestra.core.tasks.flows.Flow
     namespace: dev.data-pipelines
     flowId: sync-data-pipelines
     
-  - id: syn-dev.ops-actions
+  - id: ops-actions
     type: io.kestra.core.tasks.flows.Flow
     namespace: dev.ops-actions
     flowId: sync-ops-actions
