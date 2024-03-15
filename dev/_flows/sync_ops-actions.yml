@@ -1,4 +1,4 @@
-id: sync_ops-actions
+id: sync-ops-actions
 namespace: dev.ops-actions
 tasks:
   - id: git-sync

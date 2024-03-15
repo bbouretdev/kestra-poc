@@ -1,4 +1,4 @@
-id: sync_data-pipelines
+id: sync-data-pipelines
 namespace: dev.data-pipelines
 tasks:
   - id: git-sync

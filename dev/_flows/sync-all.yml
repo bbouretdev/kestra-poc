@@ -7,16 +7,12 @@ tasks:
     branch: master
     gitDirectory: dev
 
-id: sync_all
-namespace: dev
-description: This flow will launch a subflow passing parameters as `inputs`, wait until the end of the execution and gather the output of a task.
-tasks:
-  - id: sync_dev.data-pipelines
+  - id: sync-dev.data-pipelines
     type: io.kestra.core.tasks.flows.Flow
     namespace: dev.data-pipelines
-    flowId: sync_data-pipelines
+    flowId: sync-data-pipelines
     
-  - id: sync_dev.ops-actions
+  - id: syn-dev.ops-actions
     type: io.kestra.core.tasks.flows.Flow
     namespace: dev.ops-actions
-    flowId: sync_ops-actions
+    flowId: sync-ops-actions
