@@ -1,15 +1,22 @@
 id: sync-all
 namespace: dev
-
-inputs:
-  - name: PAT
-    type: STRING
-
 tasks:
   - id: git-sync
     type: io.kestra.plugin.git.Sync
     url: https://github.com/bbouretdev/kestra-poc
     branch: master
-    username: bbouretdev
-    password: "{{ inputs.PAT }}"
     gitDirectory: dev
+
+id: sync_all
+namespace: dev
+description: This flow will launch a subflow passing parameters as `inputs`, wait until the end of the execution and gather the output of a task.
+tasks:
+  - id: sync_dev.data-pipelines
+    type: io.kestra.core.tasks.flows.Flow
+    namespace: dev.data-pipelines
+    flowId: sync_data-pipelines
+    
+  - id: sync_dev.ops-actions
+    type: io.kestra.core.tasks.flows.Flow
+    namespace: dev.ops-actions
+    flowId: sync_ops-actions

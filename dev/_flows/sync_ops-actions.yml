@@ -1,0 +1,9 @@
+id: sync_ops-actions
+namespace: dev.ops-actions
+tasks:
+  - id: git-sync
+    type: io.kestra.plugin.git.Sync
+    url: https://github.com/bbouretdev/kestra-poc
+    branch: master
+    gitDirectory: dev/ops-actions
+    namespaceFilesDirectory: dev/ops-actions
