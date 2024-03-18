@@ -1,0 +1,201 @@
+version: '3.6'
+services:
+  postgres-poc:
+    image: postgres:latest
+    container_name: postgres-poc
+    environment:
+      POSTGRES_DB: kestra-poc
+      POSTGRES_USER: kestra
+      POSTGRES_PASSWORD: kestra
+    ports:
+      - "5431:5431"
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    restart: always
+### PGS ####
+  postgres:
+      image: postgres
+      volumes:
+        - postgres-data:/var/lib/postgresql/data
+      environment:
+        POSTGRES_DB: kestra
+        POSTGRES_USER: kestra
+        POSTGRES_PASSWORD: k3str4
+      healthcheck:
+        test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+        interval: 30s
+        timeout: 10s
+        retries: 10
+
+### KESTRA ####
+  kestra:
+    image: kestra/kestra:latest-full
+    pull_policy: always
+    # Note that this is meant for development only. Refer to the documentation for production deployments of Kestra which runs without a root user.
+    user: "root"
+    command: server standalone --worker-thread=128
+    volumes:
+      - kestra-data:/app/storage
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp/kestra-wd:/tmp/kestra-wd
+    environment:
+      KESTRA_CONFIGURATION: |
+        datasources:
+          postgres:
+            url: jdbc:postgresql://postgres:5432/kestra
+            driverClassName: org.postgresql.Driver
+            username: kestra
+            password: k3str4
+        kestra:
+          kafka:
+              client:
+                properties:
+                  bootstrap.servers: kafka:9092
+          server:
+            basic-auth:
+              enabled: false
+              username: "admin@kestra.io" # it must be a valid email address
+              password: kestra
+          repository:
+            type: postgres
+          storage:
+            type: local
+            local:
+              base-path: "/app/storage"
+          queue:
+            type: postgres
+          tasks:
+            tmp-dir:
+              path: /tmp/kestra-wd/tmp
+          url: http://localhost:8080/
+    ports:
+      - "8087:8080"
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_started
+### AKHQ ####
+  akhq:
+    image: tchiotludo/akhq
+    restart: unless-stopped
+    environment:
+      AKHQ_CONFIGURATION: |
+        akhq:
+          connections:
+            docker-kafka-server:
+              properties:
+                bootstrap.servers: "kafka:9092"
+              schema-registry:
+                url: "http://schema-registry:8085"
+              connect:
+                - name: "connect"
+                  url: "http://connect:8083"
+    ports:
+      - 8080:8080
+    links:
+      - kafka
+      - schema-registry
+### ZKP ####
+  zookeeper:
+    image: confluentinc/cp-zookeeper:${CONFLUENT_VERSION:-latest}
+    restart: unless-stopped
+    volumes:
+      - zookeeper-data1:/var/lib/zookeeper/data:Z
+      - zookeeper-log1:/var/lib/zookeeper/log:Z
+    environment:
+      ZOOKEEPER_CLIENT_PORT: '2181'
+      ZOOKEEPER_ADMIN_ENABLE_SERVER: 'false'
+### KAFKA ####
+  kafka:
+    image: confluentinc/cp-kafka:${CONFLUENT_VERSION:-latest}
+    restart: unless-stopped
+    volumes:
+      - kafka-data:/var/lib/kafka/data:Z
+    environment:
+      KAFKA_BROKER_ID: '0'
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_NUM_PARTITIONS: '12'
+      KAFKA_COMPRESSION_TYPE: 'gzip'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: '1'
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: '1'
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: '1'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:9092'
+      KAFKA_CONFLUENT_SUPPORT_METRICS_ENABLE: 'false'
+      KAFKA_JMX_PORT: '9091'
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_AUTHORIZER_CLASS_NAME: 'kafka.security.authorizer.AclAuthorizer'
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: 'true'
+    links:
+      - zookeeper
+### SCR ####
+  schema-registry:
+    image: confluentinc/cp-schema-registry:${CONFLUENT_VERSION:-latest}
+    restart: unless-stopped
+    depends_on:
+      - kafka
+    environment:
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'PLAINTEXT://kafka:9092'
+      SCHEMA_REGISTRY_HOST_NAME: 'schema-registry'
+      SCHEMA_REGISTRY_LISTENERS: 'http://0.0.0.0:8085'
+      SCHEMA_REGISTRY_LOG4J_ROOT_LOGLEVEL: 'INFO'
+### connect ####
+  connect:
+    image: confluentinc/cp-kafka-connect:${CONFLUENT_VERSION:-latest}
+    restart: unless-stopped
+    depends_on:
+      - kafka
+      - schema-registry
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: 'kafka:9092'
+      CONNECT_REST_PORT: '8083'
+      CONNECT_REST_LISTENERS: 'http://0.0.0.0:8083'
+      CONNECT_REST_ADVERTISED_HOST_NAME: 'connect'
+      CONNECT_CONFIG_STORAGE_TOPIC: '__connect-config'
+      CONNECT_OFFSET_STORAGE_TOPIC: '__connect-offsets'
+      CONNECT_STATUS_STORAGE_TOPIC: '__connect-status'
+      CONNECT_GROUP_ID: 'kafka-connect'
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: 'true'
+      CONNECT_KEY_CONVERTER: 'io.confluent.connect.avro.AvroConverter'
+      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: 'http://schema-registry:8085'
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: 'true'
+      CONNECT_VALUE_CONVERTER: 'io.confluent.connect.avro.AvroConverter'
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: 'http://schema-registry:8085'
+      CONNECT_INTERNAL_KEY_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter'
+      CONNECT_INTERNAL_VALUE_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter'
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: '1'
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: '1'
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: '1'
+      CONNECT_PLUGIN_PATH: ' /usr/share/java/'
+
+
+volumes:
+  zookeeper-data1:
+    driver: local
+  zookeeper-log1:
+    driver: local
+  postgres-data:
+    driver: local
+  kafka-data:
+    driver: local
+  kestra-data:
+    driver: local
+
+
+################ KESTRA TASKS #########################
+# id: api-kafka
+# namespace: dev.data-pipelines
+
+# tasks:
+
+#   - id: produce
+#     type: io.kestra.plugin.kafka.Produce
+#     from:
+#       key: testKey
+#       value: "testValue"
+#     keySerializer: STRING
+#     valueSerializer: STRING
+#     topic: kestra
+#     properties:
+#       bootstrap.servers: kestra-poc-kafka-1:9092
+#       transactional.id: "testTID"
+#####################################################
