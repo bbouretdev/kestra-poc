@@ -20,9 +20,12 @@ for pokemon in pokemons:
     fields['spe'] = data['stats'][5]['base_stat']
     csvLines.append(fields)
 df = pd.DataFrame(csvLines)
+host = "localhost"
+port = "5431"
+database = "kestra-poc"
+user = "kestra"
 password = "kestra"
-host = "51.68.229.67"
-engine = create_engine(f"postgresql://kestra:{password}@{host}:5432/pokeapi")
+engine = create_engine(f"postgresql://{user}:{password}@{host}:{port}/{database}")
 # Write into Postgre table
 df.to_sql("pokemons", engine, if_exists="append", index=False)
 # Write dataframe into output CSV file
