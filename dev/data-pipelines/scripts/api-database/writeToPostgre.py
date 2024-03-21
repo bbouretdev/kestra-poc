@@ -20,7 +20,7 @@ for pokemon in pokemons:
     fields['spe'] = data['stats'][5]['base_stat']
     csvLines.append(fields)
 df = pd.DataFrame(csvLines)
-host = "localhost"
+host = "51.68.229.67"
 port = "5431"
 database = "kestra-poc"
 user = "kestra"
