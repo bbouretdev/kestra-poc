@@ -1,0 +1,18 @@
+id: sync-all
+namespace: namespace1
+tasks:
+  - id: git-sync
+    type: io.kestra.plugin.git.Sync
+    url: https://github.com/bbouretdev/kestra-poc
+    branch: master
+    gitDirectory: namespace1
+
+  - id: subnamespace1
+    type: io.kestra.core.tasks.flows.Flow
+    namespace: namespace1.subnamespace1
+    flowId: sync-subnamespace1
+    
+  - id: subnamespace2
+    type: io.kestra.core.tasks.flows.Flow
+    namespace: namespace1.subnamespace2
+    flowId: sync-subnamespace2

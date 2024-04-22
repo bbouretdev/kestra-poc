@@ -1,0 +1,12 @@
+id: flow1
+namespace: namespace1.subnamespace2
+tasks:
+  - id: task1
+    type: io.kestra.plugin.scripts.python.Script
+    docker:
+      image: python:slim
+    beforeCommands:
+      - pip install requests
+    outputFiles:
+      - "task1.json"
+    script: "{{ read('namespace1/subnamespace2/scripts/usecase2/script1.py') }}"

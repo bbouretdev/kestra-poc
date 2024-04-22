@@ -1,0 +1,9 @@
+id: sync-subnamespace2
+namespace: namespace1.subnamespace2
+tasks:
+  - id: git-sync
+    type: io.kestra.plugin.git.Sync
+    url: https://github.com/bbouretdev/kestra-poc
+    branch: master
+    gitDirectory: namespace1/subnamespace2
+    namespaceFilesDirectory: namespace1/subnamespace2

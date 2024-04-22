@@ -1,0 +1,1 @@
+print("namespace1.subnamespace1 : scripts/usecase1/script1.py")
